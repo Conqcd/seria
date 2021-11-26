@@ -34,6 +34,14 @@ std::enable_if_t<is_vector<T>::value> deserialize(T &data,
                                                   const mpack_node_t &node);
 
 template <typename T>
+std::enable_if_t<is_map<T>::value&&is_string<typename T::key_type>::value> deserialize(T &data,
+                                                  const mpack_node_t &node);
+
+template <typename T>
+std::enable_if_t<is_map<T>::value && !is_string<typename T::key_type>::value> deserialize(T &data,
+                                                  const mpack_node_t &node);
+
+template <typename T>
 std::enable_if_t<is_array<T>::value> deserialize(T &data,
                                                  const mpack_node_t &node);
 

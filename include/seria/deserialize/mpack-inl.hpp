@@ -103,6 +103,64 @@ std::enable_if_t<is_vector<T>::value> deserialize(T &data,
 }
 
 template <typename T>
+std::enable_if_t<is_map<T>::value&&is_string<typename T::key_type>::value> deserialize(T &data,
+                                                  const mpack_node_t &node)
+{
+  auto size = mpack_node_map_count(node);
+  if (mpack_ok != mpack_node_error(node)) {
+    throw type_error("map");
+  }
+
+  std::string keyv;
+  typename T::mapped_type valuev;
+  for (size_t i = 0; i < size; i++) {
+    try {
+      auto child_node_key = mpack_node_map_key_at(node, i);
+      auto child_node_value = mpack_node_map_value_at(node, i);
+      deserialize(valuev, child_node_value);
+      deserialize(keyv, child_node_key);
+      data[keyv]=valuev;
+    } catch (type_error &err) {
+      err.add_prefix(std::to_string(i));
+      throw err;
+    } catch (error &err) {
+      err.add_prefix(std::to_string(i));
+      throw err;
+    }
+  }
+}
+
+template <typename T>
+std::enable_if_t<is_map<T>::value&&!is_string<typename T::key_type>::value> deserialize(T &data,
+                                                  const mpack_node_t &node)
+{
+  auto size = mpack_node_map_count(node);
+  if (mpack_ok != mpack_node_error(node)) {
+    throw type_error("map");
+  }
+
+  typename T::key_type keyv;
+  std::string keyvs;
+  typename T::mapped_type valuev;
+  for (size_t i = 0; i < size; i++) {
+    try {
+      auto child_node_key = mpack_node_map_key_at(node, i);
+      auto child_node_value = mpack_node_map_value_at(node, i);
+      deserialize(valuev, child_node_value);
+      deserialize(keyvs, child_node_key);
+      keyv=static_cast<typename T::key_type>(stod(keyvs));
+      data[keyv]=valuev;
+    } catch (type_error &err) {
+      err.add_prefix(std::to_string(i));
+      throw err;
+    } catch (error &err) {
+      err.add_prefix(std::to_string(i));
+      throw err;
+    }
+  }
+}
+
+template <typename T>
 std::enable_if_t<is_array<T>::value> deserialize(T &data,
                                                  const mpack_node_t &node) {
   auto size = mpack_node_array_length(node);

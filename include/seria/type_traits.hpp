@@ -3,6 +3,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <map>
 
 namespace seria {
 
@@ -31,6 +32,15 @@ struct is_vector<T, std::enable_if_t<std::is_same<
                                        typename T::allocator_type>>::value>>
     : std::true_type {};
 
+
+template <typename T, typename _ = void> struct is_map : std::false_type {};
+
+template <typename T>
+struct is_map<T, std::enable_if_t<std::is_same<
+                        T, std::map<typename T::key_type,typename T::mapped_type,
+                        typename T::key_compare,typename T::allocator_type>>::value>>
+    : std::true_type {};
+
 template <typename T> struct is_array : std::false_type {};
 
 template <typename T, size_t N> struct is_array<T[N]> : std::true_type {
@@ -51,7 +61,8 @@ template <typename T, typename _ = void> struct is_object : std::false_type {};
 template <typename T>
 struct is_object<
     T, std::enable_if_t<(!is_array<T>::value) && (!is_string<T>::value) &&
-                        (!is_vector<T>::value && std::is_class<T>::value)>>
+                        (!is_vector<T>::value && std::is_class<T>::value)&&
+                        (!is_map<T>::value    && std::is_class<T>::value)>>
     : public std::true_type {};
 
 } // namespace seria
